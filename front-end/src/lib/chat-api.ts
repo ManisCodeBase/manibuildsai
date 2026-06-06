@@ -1,10 +1,19 @@
 const MAX_HISTORY = 10;
 
+const FUNCTION_APP_URL =
+  "https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net";
+
 function getChatEndpoint(): string {
   const backend = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
-  if (backend && typeof globalThis.window !== "undefined" && globalThis.window.location.hostname === "localhost") {
+  if (backend) {
     return `${backend}/api/chat`;
   }
+
+  // Fallback when SWA is not linked to the Function App (POST /api/chat on SWA returns 405)
+  if (typeof globalThis.window !== "undefined") {
+    return `${FUNCTION_APP_URL}/api/chat`;
+  }
+
   return "/api/chat";
 }
 
@@ -35,7 +44,16 @@ export async function sendChatMessages(
     body: JSON.stringify(payload),
   });
 
-  const data = (await response.json()) as ChatApiResponse | ChatApiError;
+  let data: ChatApiResponse | ChatApiError;
+  try {
+    data = (await response.json()) as ChatApiResponse | ChatApiError;
+  } catch {
+    throw new Error(
+      response.status === 405
+        ? "Chat API is unavailable. Ensure the Azure Function App is deployed and NEXT_PUBLIC_BACKEND_URL is set."
+        : "Failed to get a response. Please try again."
+    );
+  }
 
   if (!response.ok) {
     const message = "error" in data ? data.error : "Failed to get a response. Please try again.";

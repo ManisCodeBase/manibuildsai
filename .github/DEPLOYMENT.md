@@ -55,7 +55,7 @@ Go to **GitHub → repo → Settings → Secrets and variables → Actions**.
 |---|---|
 | `NEXT_PUBLIC_SITE_URL` | `https://manibuildsai.com` |
 | `GITHUB_USERNAME` | `maniscodebase` |
-| `NEXT_PUBLIC_BACKEND_URL` | `https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net` *(optional — production chat uses SWA proxy `/api/chat`)* |
+| `NEXT_PUBLIC_BACKEND_URL` | `https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net` | **Required for Digital Twin** — SWA static host returns 405 for POST `/api/chat` unless the Function App is linked |
 
 > `AZURE_FUNCTIONAPP_NAME` is no longer required — the workflow uses `DigitalTwin` directly.
 

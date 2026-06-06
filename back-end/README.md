@@ -18,6 +18,12 @@
 
 | `/api/chat` | POST | Digital Twin AI chat (OpenAI gpt-4o-mini, system-prompt grounded) |
 
+| `/api/health` | GET | Health check |
+
+| `/api/swagger` | GET | OpenAPI 3.0 JSON spec |
+
+| `/api/docs` | GET | Interactive API test page |
+
 
 
 ## Local Development

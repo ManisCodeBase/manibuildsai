@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using ManiBuildsAI.Functions.Http;
 using ManiBuildsAI.Functions.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -107,7 +108,7 @@ public class ContactFunction(ILogger<ContactFunction> logger)
     private static HttpResponseData CorsResponse(HttpRequestData req, HttpStatusCode status)
     {
         var res = req.CreateResponse(status);
-        AddCorsHeaders(res);
+        AddCorsHeaders(res, req);
         return res;
     }
 
@@ -115,18 +116,13 @@ public class ContactFunction(ILogger<ContactFunction> logger)
         HttpRequestData req, HttpStatusCode status, object payload)
     {
         var res = req.CreateResponse(status);
-        AddCorsHeaders(res);
+        AddCorsHeaders(res, req);
         await res.WriteAsJsonAsync(payload);
         return res;
     }
 
-    private static void AddCorsHeaders(HttpResponseData res)
-    {
-        var allowed = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS") ?? "*";
-        res.Headers.Add("Access-Control-Allow-Origin",  allowed == "*" ? "*" : allowed.Split(',')[0]);
-        res.Headers.Add("Access-Control-Allow-Methods", "POST, OPTIONS");
-        res.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
-    }
+    private static void AddCorsHeaders(HttpResponseData res, HttpRequestData req) =>
+        CorsHelper.AddCorsHeaders(res, req);
 
     private static bool IsValidEmail(string email) =>
         Regex.IsMatch(email, @"^[^\s@]+@[^\s@]+\.[^\s@]+$");
