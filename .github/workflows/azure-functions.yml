@@ -15,27 +15,33 @@ on:
       - ".github/workflows/azure-functions.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: write
+
 env:
   AZURE_FUNCTIONAPP_PACKAGE_PATH: back-end
   DOTNET_VERSION: "8.0.x"
+  FUNCTION_APP_NAME: DigitalTwin
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Build & Test Backend
+    name: Build Backend
     defaults:
       run:
         working-directory: back-end
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore
 
       - name: Build
@@ -56,6 +62,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy to Azure Functions
     needs: build
+    permissions:
+      contents: read
 
     steps:
       - name: Download artifact
@@ -64,18 +72,78 @@ jobs:
           name: function-app
           path: ./output
 
-      - name: Deploy to Azure Functions
-        uses: Azure/functions-action@v1
-        id: deploy
-        with:
-          app-name: DigitalTwin
-          package: ./output
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+      - name: Create deployment zip
+        run: |
+          cd output
+          zip -r ../deploy.zip . -q
+          ls -lh ../deploy.zip
+
+      # Zip Deploy via Kudu — avoids Azure/functions-action (often blocked by org policies)
+      - name: Deploy to Azure Functions (Zip Deploy)
+        env:
+          PUBLISH_PROFILE: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+        run: |
+          python3 <<'PY'
+          import os
+          import sys
+          import urllib.request
+          import xml.etree.ElementTree as ET
+
+          profile_xml = os.environ.get("PUBLISH_PROFILE", "").strip()
+          if not profile_xml:
+              print("::error::AZURE_FUNCTIONAPP_PUBLISH_PROFILE secret is not set.")
+              sys.exit(1)
+
+          root = ET.fromstring(profile_xml)
+          zip_profile = None
+          for node in root.findall("publishProfile"):
+              if node.get("publishMethod") == "ZipDeploy":
+                  zip_profile = node
+                  break
+
+          if zip_profile is None:
+              print("::error::ZipDeploy profile not found in publish settings.")
+              sys.exit(1)
+
+          publish_url = zip_profile.get("publishUrl", "").replace(":443", "")
+          username = zip_profile.get("userName")
+          password = zip_profile.get("userPWD")
+
+          if not publish_url or not username or not password:
+              print("::error::Publish profile is missing publishUrl, userName, or userPWD.")
+              sys.exit(1)
+
+          deploy_url = f"https://{publish_url}/api/zipdeploy?isAsync=true"
+          print(f"Deploying to {deploy_url}")
+
+          with open("deploy.zip", "rb") as package:
+              request = urllib.request.Request(
+                  deploy_url,
+                  data=package.read(),
+                  method="POST",
+                  headers={"Content-Type": "application/zip"},
+              )
+
+          password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+          password_mgr.add_password(None, deploy_url, username, password)
+          opener = urllib.request.build_opener(urllib.request.HTTPBasicAuthHandler(password_mgr))
+
+          with opener.open(request, timeout=600) as response:
+              body = response.read().decode("utf-8", errors="replace")
+              print(f"Deploy response ({response.status}): {body[:500]}")
+              if response.status >= 400:
+                  print(f"::error::Zip deploy failed with status {response.status}")
+                  sys.exit(1)
+
+          print("Zip deploy completed successfully.")
+          PY
 
       - name: Deployment summary
         run: |
-          echo "Deployed to Function App: DigitalTwin"
+          echo "Function App: ${{ env.FUNCTION_APP_NAME }}"
           echo "URL: https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net"
-          echo "Ensure these Application Settings are configured in Azure Portal:"
-          echo "  OPENAI_API_KEY, OPENAI_MODEL, SENDGRID_API_KEY, SENDGRID_FROM_EMAIL,"
-          echo "  CONTACT_EMAIL, ALLOWED_ORIGINS, AzureWebJobsStorage, FUNCTIONS_WORKER_RUNTIME"
+          echo ""
+          echo "Runtime note: this project targets net8.0 (Azure Functions v4 isolated)."
+          echo "In Azure Portal set the stack to '.NET 8 Isolated' (not .NET 10) unless you upgrade the csproj."
+          echo ""
+          echo "Ensure Application Settings are set: OPENAI_API_KEY, OPENAI_MODEL, ALLOWED_ORIGINS, etc."

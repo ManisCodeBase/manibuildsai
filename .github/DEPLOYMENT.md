@@ -8,6 +8,22 @@
 | **URL** | `https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net` |
 | **Region** | Canada Central |
 | **Routes** | `/api/chat`, `/api/contact` |
+| **Runtime (required)** | **`.NET 8 Isolated`** — must match `net8.0` in the csproj |
+
+> If you selected **.NET 10** when creating the Function App, change it:  
+> **Azure Portal → DigitalTwin → Settings → Configuration → General settings → Stack → .NET → Version → `.NET 8 Isolated`**  
+> Otherwise the app will fail at runtime even if deploy succeeds.
+
+---
+
+## GitHub Actions — troubleshooting
+
+### "Repository access blocked"
+
+Some GitHub organizations block third-party Marketplace actions (e.g. `Azure/functions-action`).  
+This workflow deploys via **Kudu Zip Deploy** using only GitHub-owned actions (`checkout`, `setup-dotnet`, `upload-artifact`, `download-artifact`).
+
+If the error persists, check **GitHub → Organization Settings → Actions → General → Policies** and ensure GitHub-owned actions are allowed.
 
 ---
 
