@@ -13,7 +13,7 @@ The Function App host may run (default landing page) while **all `/api/*` routes
 | `AzureWebJobsStorage` | Storage connection string | **Yes** (auto-set) |
 | `OPENAI_API_KEY` | Your OpenAI key | **Yes** (chat) |
 | `OPENAI_MODEL` | `gpt-4o-mini` | No |
-| `ALLOWED_ORIGINS` | `https://manibuildsai.com,https://proud-smoke-089604410.2.azurestaticapps.net` | **Yes** |
+| `ALLOWED_ORIGINS` | `https://manibuildsai.com,https://www.manibuildsai.com,https://proud-smoke-089604410.2.azurestaticapps.net` | **Yes** |
 | `CONTACT_EMAIL` | `mani.ainml@gmail.com` | Contact form |
 | `SENDGRID_API_KEY` | SendGrid key | Contact form |
 | `SENDGRID_FROM_EMAIL` | Verified sender | Contact form |
@@ -29,6 +29,29 @@ The Function App host may run (default landing page) while **all `/api/*` routes
 | **SCM Basic Auth Publishing Credentials** | **On** (required for CI/CD zip deploy) |
 
 Save → **Restart** the Function App.
+
+## CORS (browser calls from manibuildsai.com)
+
+Swagger works on the Function App URL (same origin). The website calls a **different domain**, so configure CORS in **both** places:
+
+### 1. Application setting (already started)
+
+Update `ALLOWED_ORIGINS` to include all site URLs:
+
+```
+https://manibuildsai.com,https://www.manibuildsai.com,https://proud-smoke-089604410.2.azurestaticapps.net,http://localhost:3000
+```
+
+### 2. Azure Portal CORS blade (often missed)
+
+**DigitalTwin → API → CORS** — add each allowed origin:
+
+- `https://manibuildsai.com`
+- `https://www.manibuildsai.com`
+- `https://proud-smoke-089604410.2.azurestaticapps.net`
+- `http://localhost:3000`
+
+Click **Save**. Do not enable **Access-Control-Allow-Credentials** unless required.
 
 ## Verify endpoints
 
