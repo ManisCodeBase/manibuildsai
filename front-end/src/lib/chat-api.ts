@@ -1,19 +1,19 @@
 const MAX_HISTORY = 10;
 
+const FUNCTION_APP_URL =
+  "https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net";
+
 function getChatEndpoint(): string {
   const backend = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
-
-  // Local dev — call the Functions host directly (cross-origin, CORS handled by CorsMiddleware)
-  if (
-    backend &&
-    typeof globalThis.window !== "undefined" &&
-    (globalThis.window.location.hostname === "localhost" ||
-      globalThis.window.location.hostname === "127.0.0.1")
-  ) {
+  if (backend) {
     return `${backend}/api/chat`;
   }
 
-  // Production — same-origin via SWA rewrite in staticwebapp.config.json (no browser CORS)
+  // Fallback when SWA is not linked to the Function App (POST /api/chat on SWA returns 405)
+  if (typeof globalThis.window !== "undefined") {
+    return `${FUNCTION_APP_URL}/api/chat`;
+  }
+
   return "/api/chat";
 }
 
@@ -50,9 +50,9 @@ export async function sendChatMessages(
   } catch {
     throw new Error(
       response.status === 405
-        ? "Chat API proxy is not configured. Redeploy the front-end with the updated staticwebapp.config.json."
+        ? "Chat API is unavailable. Ensure the Azure Function App is deployed and NEXT_PUBLIC_BACKEND_URL is set."
         : response.status === 404
-          ? "Chat API not found. Deploy the Function App and verify the SWA /api rewrite rule."
+          ? "Chat API not found. Deploy the Function App and set .NET 8 Isolated + dotnet-isolated runtime in Azure."
           : "Failed to get a response. Please try again."
     );
   }

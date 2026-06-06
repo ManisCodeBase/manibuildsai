@@ -343,11 +343,9 @@ All commands run from the `front-end/` directory:
 
 The Digital Twin uses a **static system prompt** (full resume/profile in `back-end/Prompts/digital-twin-system.txt`) with **OpenAI gpt-4o-mini** — no embeddings or RAG. OpenAI prompt caching applies automatically when the system prefix is identical across requests.
 
-**Flow:** `DigitalTwin.tsx` → `POST /api/chat` (same origin) → SWA rewrite → Azure Function → OpenAI
+**Flow:** `DigitalTwin.tsx` → `POST {BACKEND_URL}/api/chat` → Azure Function → OpenAI
 
-**Production:** Uses `/api/chat` on `manibuildsai.com` (proxied via `staticwebapp.config.json`) — **no browser CORS**. Do not call the Function App URL directly from the UI.
-
-**Local dev:** Set `NEXT_PUBLIC_BACKEND_URL=http://localhost:7071` and run `func start`.
+**Production:** calls the Function App directly (`NEXT_PUBLIC_BACKEND_URL`). POST to `manibuildsai.com/api/chat` returns **405** unless the Function App is linked to the SWA.
 
 **Test API:** [Function App /api/docs](https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net/api/docs) · [OpenAPI JSON](https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net/api/swagger) · [Health](https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net/api/health)
 
