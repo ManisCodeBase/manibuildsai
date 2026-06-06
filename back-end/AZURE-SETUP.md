@@ -32,26 +32,17 @@ Save → **Restart** the Function App.
 
 ## CORS (browser calls from manibuildsai.com)
 
-Swagger works on the Function App URL (same origin). The website calls a **different domain**, so configure CORS in **both** places:
+**Root cause:** Azure blocks OPTIONS preflight at the **platform layer** unless origins are in **API → CORS**. App setting `ALLOWED_ORIGINS` alone is not enough for direct cross-origin calls.
 
-### 1. Application setting (already started)
+**Recommended fix (no browser CORS):** The front-end calls **`/api/chat` on manibuildsai.com**. SWA rewrites that to the Function App via `staticwebapp.config.json` — same origin, no preflight.
 
-Update `ALLOWED_ORIGINS` to include all site URLs:
+After deploying the front-end, test:
 
+```powershell
+curl.exe -X POST "https://manibuildsai.com/api/chat" -H "Content-Type: application/json" -d "{\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}"
 ```
-https://manibuildsai.com,https://www.manibuildsai.com,https://proud-smoke-089604410.2.azurestaticapps.net,http://localhost:3000
-```
 
-### 2. Azure Portal CORS blade (often missed)
-
-**DigitalTwin → API → CORS** — add each allowed origin:
-
-- `https://manibuildsai.com`
-- `https://www.manibuildsai.com`
-- `https://proud-smoke-089604410.2.azurestaticapps.net`
-- `http://localhost:3000`
-
-Click **Save**. Do not enable **Access-Control-Allow-Credentials** unless required.
+**Optional (direct Function App URL from browser):** Configure **DigitalTwin → API → CORS** — see `back-end/scripts/configure-azure-cors.ps1`.
 
 ## Verify endpoints
 
