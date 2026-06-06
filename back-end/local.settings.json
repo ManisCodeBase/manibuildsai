@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "SENDGRID_API_KEY": "YOUR_SENDGRID_API_KEY_HERE",
+    "SENDGRID_FROM_EMAIL": "noreply@mani.dev",
+    "CONTACT_EMAIL": "mani.ainml@gmail.com",
+    "ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:4280,https://proud-smoke-089604410.2.azurestaticapps.net,https://manibuildsai.com"
+  },
+  "Host": {
+    "LocalHttpPort": 7071,
+    "CORS": "http://localhost:3000,http://localhost:4280",
+    "CORSCredentials": false
+  }
+}
