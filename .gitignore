@@ -10,6 +10,7 @@ front-end/_next_api_temp/
 back-end/bin/
 back-end/obj/
 back-end/output/
+back-end/function-app.zip
 **/local.settings.json
 
 # ── OS / Editor ───────────────────────────────────────────────────────────────

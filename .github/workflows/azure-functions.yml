@@ -55,11 +55,22 @@ jobs:
           echo "Registered functions:"
           python3 -c "import json; print('\n'.join(f['name'] for f in json.load(open('output/functions.metadata'))))"
 
+      - name: Create deployment zip
+        run: |
+          cd output
+          # Zip here (not after artifact upload) so hidden .azurefunctions is always included
+          zip -r ../function-app.zip . -x "*.pdb"
+          echo "Zip contents (required files):"
+          unzip -l ../function-app.zip | grep -E 'functions.metadata|worker.config.json|ManiBuildsAI.Functions.dll|\.azurefunctions/' || true
+          test "$(unzip -l ../function-app.zip | grep -c 'functions.metadata')" -eq 1
+          test "$(unzip -l ../function-app.zip | grep -c '\.azurefunctions/')" -ge 1
+          ls -lh ../function-app.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: function-app
-          path: back-end/output
+          name: function-app-zip
+          path: back-end/function-app.zip
           retention-days: 1
           if-no-files-found: error
 
@@ -78,26 +89,21 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: function-app
-          path: ./output
+          name: function-app-zip
+          path: .
 
-      - name: Create deployment zip
+      - name: Verify deployment zip
         run: |
-          cd output
-          # Must include hidden .azurefunctions folder for isolated worker HTTP triggers
-          zip -r ../deploy.zip . 
-          echo "Zip contents (required files):"
-          unzip -l ../deploy.zip | grep -E 'functions.metadata|worker.config.json|ManiBuildsAI.Functions.dll|\.azurefunctions/' 
-          test "$(unzip -l ../deploy.zip | grep -c 'functions.metadata')" -eq 1
-          test "$(unzip -l ../deploy.zip | grep -c '.azurefunctions/')" -ge 1
-          ls -lh ../deploy.zip
+          test -f ./function-app.zip || (echo "::error::Missing function-app.zip artifact" && exit 1)
+          unzip -l ./function-app.zip | grep -E 'functions.metadata|\.azurefunctions/' || true
+          test "$(unzip -l ./function-app.zip | grep -c '\.azurefunctions/')" -ge 1
 
       - name: Deploy to Azure Functions (Zip Deploy)
         env:
           PUBLISH_PROFILE: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
         run: |
           chmod +x .github/scripts/azure-zipdeploy.sh
-          .github/scripts/azure-zipdeploy.sh deploy.zip "${{ env.FUNCTION_APP_URL }}/api/health"
+          .github/scripts/azure-zipdeploy.sh function-app.zip "${{ env.FUNCTION_APP_URL }}/api/health"
 
       - name: Deployment summary
         run: |
