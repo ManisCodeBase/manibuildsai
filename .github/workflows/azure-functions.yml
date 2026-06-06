@@ -22,9 +22,9 @@ permissions:
   actions: write
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: back-end
   DOTNET_VERSION: "8.0.x"
   FUNCTION_APP_NAME: DigitalTwin
+  FUNCTION_APP_URL: https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net
 
 jobs:
   build:
@@ -43,14 +43,17 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
       - name: Publish
-        run: dotnet publish --configuration Release --output ./output --no-build
+        run: dotnet publish --configuration Release --output ./output
+
+      - name: Verify publish output
+        run: |
+          test -f ./output/functions.metadata || (echo "::error::Missing functions.metadata" && exit 1)
+          test -f ./output/worker.config.json || (echo "::error::Missing worker.config.json" && exit 1)
+          test -f ./output/ManiBuildsAI.Functions.dll || (echo "::error::Missing ManiBuildsAI.Functions.dll" && exit 1)
+          test -d ./output/.azurefunctions || (echo "::error::Missing .azurefunctions folder" && exit 1)
+          echo "Registered functions:"
+          python3 -c "import json; print('\n'.join(f['name'] for f in json.load(open('output/functions.metadata'))))"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -58,9 +61,10 @@ jobs:
           name: function-app
           path: back-end/output
           retention-days: 1
+          if-no-files-found: error
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     name: Deploy to Azure Functions
     needs: build
@@ -80,7 +84,12 @@ jobs:
       - name: Create deployment zip
         run: |
           cd output
-          zip -r ../deploy.zip . -q
+          # Must include hidden .azurefunctions folder for isolated worker HTTP triggers
+          zip -r ../deploy.zip . 
+          echo "Zip contents (required files):"
+          unzip -l ../deploy.zip | grep -E 'functions.metadata|worker.config.json|ManiBuildsAI.Functions.dll|\.azurefunctions/' 
+          test "$(unzip -l ../deploy.zip | grep -c 'functions.metadata')" -eq 1
+          test "$(unzip -l ../deploy.zip | grep -c '.azurefunctions/')" -ge 1
           ls -lh ../deploy.zip
 
       - name: Deploy to Azure Functions (Zip Deploy)
@@ -88,12 +97,12 @@ jobs:
           PUBLISH_PROFILE: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
         run: |
           chmod +x .github/scripts/azure-zipdeploy.sh
-          .github/scripts/azure-zipdeploy.sh deploy.zip
+          .github/scripts/azure-zipdeploy.sh deploy.zip "${{ env.FUNCTION_APP_URL }}/api/health"
 
       - name: Deployment summary
         run: |
           echo "Function App: ${{ env.FUNCTION_APP_NAME }}"
-          echo "URL: https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net"
-          echo ""
-          echo "Runtime: set Azure stack to '.NET 8 Isolated' (project targets net8.0)."
-          echo "App settings: OPENAI_API_KEY, OPENAI_MODEL, ALLOWED_ORIGINS, etc."
+          echo "URL: ${{ env.FUNCTION_APP_URL }}"
+          echo "Health: ${{ env.FUNCTION_APP_URL }}/api/health"
+          echo "Docs:   ${{ env.FUNCTION_APP_URL }}/api/docs"
+          echo "Chat:   POST ${{ env.FUNCTION_APP_URL }}/api/chat"

@@ -35,6 +35,17 @@ If the error persists, check **GitHub → Organization Settings → Actions → 
 
 Also confirm the Function App is **Running** and not restricted by networking rules blocking the GitHub Actions runner.
 
+### All `/api/*` endpoints return 404
+
+The Function App host is running but **no functions are loaded**. See **[back-end/AZURE-SETUP.md](../back-end/AZURE-SETUP.md)**.
+
+Quick fix checklist:
+
+1. Set **`FUNCTIONS_WORKER_RUNTIME`** = `dotnet-isolated`
+2. Set **Stack** = **`.NET 8 Isolated`** (not .NET 10)
+3. Restart the app
+4. Re-run **Deploy Backend — Azure Functions** (Actions → Run workflow)
+
 ---
 
 ## GitHub Actions — required configuration

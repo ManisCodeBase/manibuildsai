@@ -51,7 +51,9 @@ export async function sendChatMessages(
     throw new Error(
       response.status === 405
         ? "Chat API is unavailable. Ensure the Azure Function App is deployed and NEXT_PUBLIC_BACKEND_URL is set."
-        : "Failed to get a response. Please try again."
+        : response.status === 404
+          ? "Chat API not found. Deploy the Function App and set .NET 8 Isolated + dotnet-isolated runtime in Azure."
+          : "Failed to get a response. Please try again."
     );
   }
 
