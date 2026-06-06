@@ -1,5 +1,4 @@
 using System.Net;
-using ManiBuildsAI.Functions.Http;
 using ManiBuildsAI.Functions.Models;
 using ManiBuildsAI.Functions.Services;
 using Microsoft.Azure.Functions.Worker;
@@ -14,12 +13,9 @@ public class DigitalTwinFunction(
 {
     [Function("DigitalTwin")]
     public async Task<HttpResponseData> RunAsync(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = "chat")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "chat")]
         HttpRequestData req)
     {
-        if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            return CorsResponse(req, HttpStatusCode.OK);
-
         ChatRequest? body;
         try
         {
@@ -70,22 +66,11 @@ public class DigitalTwinFunction(
         }
     }
 
-    private static HttpResponseData CorsResponse(HttpRequestData req, HttpStatusCode status)
-    {
-        var res = req.CreateResponse(status);
-        AddCorsHeaders(res, req);
-        return res;
-    }
-
     private static async Task<HttpResponseData> JsonResponse(
         HttpRequestData req, HttpStatusCode status, object payload)
     {
         var res = req.CreateResponse(status);
-        AddCorsHeaders(res, req);
         await res.WriteAsJsonAsync(payload);
         return res;
     }
-
-    private static void AddCorsHeaders(HttpResponseData res, HttpRequestData req) =>
-        CorsHelper.AddCorsHeaders(res, req);
 }

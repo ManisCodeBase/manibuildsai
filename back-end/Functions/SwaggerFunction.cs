@@ -1,7 +1,6 @@
 using System.Net;
 using System.Reflection;
 using System.Text;
-using ManiBuildsAI.Functions.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 
@@ -13,12 +12,9 @@ public class SwaggerFunction
 
     [Function("Health")]
     public async Task<HttpResponseData> HealthAsync(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "health")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "health")]
         HttpRequestData req)
     {
-        if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            return await JsonResponse(req, HttpStatusCode.OK, new { status = "ok" });
-
         return await JsonResponse(req, HttpStatusCode.OK, new
         {
             status = "healthy",
@@ -30,30 +26,23 @@ public class SwaggerFunction
 
     [Function("Swagger")]
     public async Task<HttpResponseData> SwaggerAsync(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "swagger")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "swagger")]
         HttpRequestData req)
     {
-        if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            return await TextResponse(req, HttpStatusCode.OK, "application/json", "{}");
-
         return await TextResponse(req, HttpStatusCode.OK, "application/json", OpenApiJson);
     }
 
     [Function("ApiDocs")]
     public async Task<HttpResponseData> DocsAsync(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "docs")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "docs")]
         HttpRequestData req)
     {
-        if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            return await TextResponse(req, HttpStatusCode.OK, "text/html", string.Empty);
-
         return await TextResponse(req, HttpStatusCode.OK, "text/html; charset=utf-8", DocsHtml);
     }
 
     private static async Task<HttpResponseData> JsonResponse(HttpRequestData req, HttpStatusCode status, object payload)
     {
         var res = req.CreateResponse(status);
-        CorsHelper.AddCorsHeaders(res, req);
         await res.WriteAsJsonAsync(payload);
         return res;
     }
@@ -62,7 +51,6 @@ public class SwaggerFunction
         HttpRequestData req, HttpStatusCode status, string contentType, string body)
     {
         var res = req.CreateResponse(status);
-        CorsHelper.AddCorsHeaders(res, req);
         res.Headers.Add("Content-Type", contentType);
         await res.WriteStringAsync(body, Encoding.UTF8);
         return res;

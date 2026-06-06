@@ -9,13 +9,12 @@
     "SENDGRID_API_KEY": "YOUR_SENDGRID_API_KEY_HERE",
     "SENDGRID_FROM_EMAIL": "noreply@manibuildsai.com",
     "CONTACT_EMAIL": "mani.ainml@gmail.com",
-    "ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:4280,https://proud-smoke-089604410.2.azurestaticapps.net,https://manibuildsai.com",
     "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY_HERE",
     "OPENAI_MODEL": "gpt-4o-mini"
   },
   "Host": {
     "LocalHttpPort": 7071,
-    "CORS": "http://localhost:3000,http://localhost:4280",
+    "CORS": "*",
     "CORSCredentials": false
   }
 }

@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text.RegularExpressions;
-using ManiBuildsAI.Functions.Http;
 using ManiBuildsAI.Functions.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -23,13 +22,9 @@ public class ContactFunction(ILogger<ContactFunction> logger)
 
     [Function("Contact")]
     public async Task<HttpResponseData> RunAsync(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = "contact")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "contact")]
         HttpRequestData req)
     {
-        // ── CORS preflight ────────────────────────────────────────────────
-        if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            return CorsResponse(req, HttpStatusCode.OK);
-
         // ── Parse body ────────────────────────────────────────────────────
         ContactFormData? form;
         try
@@ -105,24 +100,13 @@ public class ContactFunction(ILogger<ContactFunction> logger)
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
-    private static HttpResponseData CorsResponse(HttpRequestData req, HttpStatusCode status)
-    {
-        var res = req.CreateResponse(status);
-        AddCorsHeaders(res, req);
-        return res;
-    }
-
     private static async Task<HttpResponseData> JsonResponse(
         HttpRequestData req, HttpStatusCode status, object payload)
     {
         var res = req.CreateResponse(status);
-        AddCorsHeaders(res, req);
         await res.WriteAsJsonAsync(payload);
         return res;
     }
-
-    private static void AddCorsHeaders(HttpResponseData res, HttpRequestData req) =>
-        CorsHelper.AddCorsHeaders(res, req);
 
     private static bool IsValidEmail(string email) =>
         Regex.IsMatch(email, @"^[^\s@]+@[^\s@]+\.[^\s@]+$");
