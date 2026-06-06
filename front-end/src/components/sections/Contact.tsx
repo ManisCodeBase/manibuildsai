@@ -41,68 +41,34 @@ const SUBJECT_LABELS: Record<string, string> = {
   other: "General Inquiry",
 };
 
-function buildEmailHtml(name: string, email: string, subject: string, message: string): string {
+function buildPlainTextMessage(name: string, email: string, subject: string, message: string): string {
   const subjectLabel = SUBJECT_LABELS[subject] ?? subject;
   const timestamp = new Date().toLocaleString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
     hour: "2-digit", minute: "2-digit", timeZoneName: "short",
   });
-  const escapedMessage = message.replace(/\n/g, "<br/>");
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
-<body style="margin:0;padding:0;background:#09090f;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#09090f;padding:40px 16px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-
-        <!-- Header -->
-        <tr><td style="background:linear-gradient(135deg,#0d1117 0%,#0f1a2e 100%);border:1px solid #1e3a5f;border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
-          <div style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:22px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px;">manibuildsai.com</div>
-          <div style="color:#64748b;font-size:12px;letter-spacing:2px;text-transform:uppercase;">New Inbound Message</div>
-        </td></tr>
-
-        <!-- Category badge -->
-        <tr><td style="background:#0d1117;border-left:1px solid #1e3a5f;border-right:1px solid #1e3a5f;padding:20px 40px 0;">
-          <span style="display:inline-block;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);color:#00d4ff;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:999px;">${subjectLabel}</span>
-        </td></tr>
-
-        <!-- Sender card -->
-        <tr><td style="background:#0d1117;border-left:1px solid #1e3a5f;border-right:1px solid #1e3a5f;padding:24px 40px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:20px 24px;">
-            <tr>
-              <td style="vertical-align:top;width:44px;padding-right:16px;">
-                <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#1e3a5f,#3b1f6e);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#00d4ff;text-align:center;line-height:44px;">${name.charAt(0).toUpperCase()}</div>
-              </td>
-              <td style="vertical-align:top;">
-                <div style="color:#f1f5f9;font-size:16px;font-weight:600;margin-bottom:4px;">${name}</div>
-                <a href="mailto:${email}" style="color:#00d4ff;font-size:13px;text-decoration:none;">${email}</a>
-                <div style="color:#475569;font-size:11px;margin-top:6px;">${timestamp}</div>
-              </td>
-              <td style="vertical-align:top;text-align:right;">
-                <a href="mailto:${email}?subject=Re: ${encodeURIComponent(subjectLabel)}" style="display:inline-block;background:linear-gradient(135deg,#0ea5e9,#7c3aed);color:#ffffff;font-size:12px;font-weight:600;padding:8px 18px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">↩ Reply</a>
-              </td>
-            </tr>
-          </table>
-        </td></tr>
-
-        <!-- Message body -->
-        <tr><td style="background:#0d1117;border-left:1px solid #1e3a5f;border-right:1px solid #1e3a5f;padding:24px 40px;">
-          <div style="color:#94a3b8;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Message</div>
-          <div style="background:#111827;border:1px solid #1e293b;border-left:3px solid #00d4ff;border-radius:0 10px 10px 0;padding:20px 24px;color:#cbd5e1;font-size:15px;line-height:1.8;">${escapedMessage}</div>
-        </td></tr>
-
-        <!-- Footer -->
-        <tr><td style="background:#0a0a14;border:1px solid #1e3a5f;border-top:1px solid #1e293b;border-radius:0 0 16px 16px;padding:20px 40px;text-align:center;">
-          <div style="color:#334155;font-size:11px;">Sent via <a href="https://manibuildsai.com" style="color:#1e4d7b;text-decoration:none;">manibuildsai.com</a> contact form &nbsp;·&nbsp; Reply directly to this email to respond to ${name}</div>
-        </td></tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  return [
+    "────────────────────────────────────",
+    "  NEW CONTACT — manibuildsai.com",
+    "────────────────────────────────────",
+    "",
+    `  Name    : ${name}`,
+    `  Email   : ${email}`,
+    `  Topic   : ${subjectLabel}`,
+    `  Sent    : ${timestamp}`,
+    "",
+    "────────────────────────────────────",
+    "  MESSAGE",
+    "────────────────────────────────────",
+    "",
+    message,
+    "",
+    "────────────────────────────────────",
+    `  Reply to: ${email}`,
+    "  Sent via https://manibuildsai.com",
+    "────────────────────────────────────",
+  ].join("\n");
 }
 
 export default function Contact() {
@@ -138,7 +104,7 @@ export default function Contact() {
             subject: `New message from ${formData.name} — ${subjectLabel}`,
             from_name: formData.name,
             replyto: formData.email,
-            message: buildEmailHtml(formData.name, formData.email, formData.subject, formData.message),
+            message: buildPlainTextMessage(formData.name, formData.email, formData.subject, formData.message),
           }),
         });
         const data = await response.json();
