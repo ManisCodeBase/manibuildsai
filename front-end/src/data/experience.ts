@@ -1,0 +1,101 @@
+import type { Experience } from "@/types";
+
+export const experiences: Experience[] = [
+  {
+    id: "insightsoftware",
+    company: "Insightsoftware",
+    role: "Senior Software Engineer — AI & Applied Intelligence",
+    period: "Jun 2023 – Present",
+    location: "Hyderabad, India",
+    description:
+      "Led the AI transformation of enterprise financial disclosure and reporting systems. Responsible for taking AI features from design through to production, working across the full stack from Azure infrastructure to API surfaces to frontend integration.",
+    achievements: [
+      "Designed and built an Advanced RAG pipeline using Azure AI Foundry, Azure OpenAI, and Azure AI Search — combining hybrid retrieval (keyword + vector), semantic re-ranking, intelligent chunking, and query expansion for high-accuracy compliance document processing.",
+      "Engineered a multi-agent reporting system using Semantic Kernel, AutoGen, and LangGraph, with specialized agents for data retrieval (SQL/API), LLM reasoning, and structured report generation — reducing manual reporting effort by 60%.",
+      "Built and integrated MCP (Model Context Protocol) enterprise connectors enabling AI agents to interact with SQL databases, REST APIs, and external SaaS systems with natural language queries and dynamic function calling.",
+      "Implemented memory-driven agentic workflows with vector memory and persistent context, enabling multi-turn document-aware AI interactions across long-horizon financial tasks.",
+      "Developed a multi-model routing layer directing different LLMs to specialized tasks (reasoning, extraction, summarization) to balance cost, latency, and output quality.",
+      "Created prompt evaluation frameworks to systematically measure and improve LLM output quality, reducing hallucinations across model upgrades.",
+      "Instrumented services with OpenTelemetry, distributed tracing, and structured logging, providing operational visibility across distributed AI workflows.",
+    ],
+    techStack: [
+      "Azure AI Foundry",
+      "Azure OpenAI",
+      "Semantic Kernel",
+      "LangGraph",
+      "AutoGen",
+      "MCP",
+      ".NET 8",
+      "Azure Functions",
+      "Azure AI Search",
+      "pgvector",
+      "React",
+      "Azure DevOps",
+    ],
+    type: "full-time",
+  },
+  {
+    id: "philips",
+    company: "Philips",
+    role: "Software Technologist",
+    period: "Apr 2022 – Jun 2023",
+    location: "Bangalore, India",
+    description:
+      "Delivered enhancements to a regulated healthcare platform, integrating AI capabilities and strengthening API security and reliability across patient-facing and clinician-facing systems.",
+    achievements: [
+      "Integrated Azure Cognitive Services and Azure OpenAI to enable intelligent document processing and clinical decision support features within the platform.",
+      "Built secure, high-throughput APIs using ASP.NET Core and Azure API Management, with OAuth2/OIDC authentication and input validation aligned to healthcare data compliance requirements.",
+      "Developed real-time communication modules (chat and video) using SignalR, integrated into patient and clinician-facing web applications.",
+      "Established automated regression testing pipelines using Cypress, cutting manual QA cycles and improving release stability.",
+    ],
+    techStack: [
+      ".NET Core",
+      "React",
+      "Angular",
+      "Azure Services",
+      "Azure OpenAI",
+      "SQL Server",
+      "Cypress",
+      "SignalR",
+      "OAuth2/OIDC",
+    ],
+    type: "full-time",
+  },
+  {
+    id: "adp",
+    company: "ADP",
+    role: "Senior Member Technical",
+    period: "Nov 2019 – Mar 2022",
+    location: "Hyderabad, India",
+    description:
+      "Developed and maintained microservices components for ADP's enterprise payroll and HCM platform serving global clients across multiple countries.",
+    achievements: [
+      "Built and owned microservices-based platform APIs using .NET Core and Azure, integrating multiple enterprise data sources and downstream systems.",
+      "Designed event-driven workflows using Azure Service Bus and Azure Functions to automate payroll processing tasks, reducing manual operational overhead.",
+      "Improved test coverage and CI/CD pipeline reliability, contributing to a more consistent delivery cadence across the team.",
+    ],
+    techStack: [
+      ".NET Core",
+      "Azure Functions",
+      "Azure Service Bus",
+      "Application Insights",
+      "SQL Server",
+    ],
+    type: "full-time",
+  },
+  {
+    id: "optionmatrix",
+    company: "Option Matrix Infotech",
+    role: "Software Engineer",
+    period: "Oct 2016 – Nov 2019",
+    location: "Hyderabad, India",
+    description:
+      "Built end-to-end ERP and CRM solutions across multiple client engagements in Agile delivery teams.",
+    achievements: [
+      "Built end-to-end ERP and CRM solutions using ASP.NET MVC, Angular, and SQL Server across multiple client engagements.",
+      "Participated in Agile delivery cycles, authored unit tests, and contributed to code reviews.",
+    ],
+    techStack: ["ASP.NET MVC", "Angular", "SQL Server", "C#"],
+    type: "full-time",
+  },
+];

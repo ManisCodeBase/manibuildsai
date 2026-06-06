@@ -1,0 +1,26 @@
+# ── Front-end ─────────────────────────────────────────────────────────────────
+front-end/node_modules/
+front-end/.next/
+front-end/out/
+front-end/.env.local
+front-end/.env*.local
+front-end/_next_api_temp/
+
+# ── Back-end ──────────────────────────────────────────────────────────────────
+back-end/bin/
+back-end/obj/
+back-end/local.settings.json   # contains secrets — never commit
+
+# ── OS / Editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.suo
+*.user
+.vs/
+.idea/
+*.swp
+*~
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
