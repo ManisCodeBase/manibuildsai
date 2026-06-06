@@ -16,6 +16,7 @@ fi
 python3 <<'PY'
 import html
 import os
+import shlex
 import sys
 import xml.etree.ElementTree as ET
 
@@ -60,17 +61,17 @@ with open(netrc_path, "w", encoding="utf-8") as netrc:
 os.chmod(netrc_path, 0o600)
 
 with open("/tmp/azure-deploy.env", "w", encoding="utf-8") as env_file:
-    env_file.write(f"DEPLOY_URL={deploy_url}\n")
-    env_file.write(f"NETRC_PATH={netrc_path}\n")
-    env_file.write(f"SCM_HOST={host}\n")
-    env_file.write(f"SCM_USER={username}\n")
+    env_file.write(f"DEPLOY_URL={shlex.quote(deploy_url)}\n")
+    env_file.write(f"NETRC_PATH={shlex.quote(netrc_path)}\n")
 
 print(f"Deploy target: https://{publish_url}/api/zipdeploy")
 print(f"SCM user: {username[:2]}***")
 PY
 
+set -a
 # shellcheck disable=SC1091
 source /tmp/azure-deploy.env
+set +a
 
 HTTP_CODE="$(curl \
   --silent \
