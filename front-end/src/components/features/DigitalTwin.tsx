@@ -4,49 +4,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, User, Sparkles, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sendChatMessages } from "@/lib/chat-api";
 import type { ChatMessage } from "@/types";
 
-const MOCK_RESPONSES: Record<string, string> = {
-  default:
-    "Hey! I'm Mani's AI Digital Twin. I can answer questions about his experience, projects, tech stack, and what he's building. What would you like to know?",
-  experience:
-    "Mani (Manikanta Neerukattu) has 10 years of experience in the Microsoft ecosystem. Currently a Senior Software Engineer — AI & Applied Intelligence at Insightsoftware (Jun 2023–Present), where he leads AI transformation of enterprise financial reporting systems. Previously at Philips (healthcare AI) and ADP (payroll/HCM microservices).",
-  projects:
-    "Mani's key production AI projects: (1) Enterprise Advanced RAG Platform — hybrid BM25 + vector search, semantic re-ranking, RAGAS evaluation for compliance documents; (2) Agentic AI Reporting System — 3-agent pipeline with MCP connectors, cut manual reporting by 60%; (3) CareFlow Clinical AI — multi-turn agentic workflow with vector memory for healthcare; (4) XBRL/EDGAR Financial Intelligence — SEC filing extraction + anomaly detection pipeline.",
-  skills:
-    "Core stack: Azure AI Foundry, Azure OpenAI (GPT-4o, Embeddings, Function Calling), Semantic Kernel, Advanced RAG, LangGraph, AutoGen, MCP (Model Context Protocol), .NET 8/C#, Python/FastAPI, pgvector, Azure AI Search, RAGAS. He's a .NET specialist who went deep into AI — not an AI researcher who learned to code.",
-  contact:
-    "Reach Mani at mani.ainml@gmail.com or connect on LinkedIn at linkedin.com/in/manifordev. He's open to senior AI engineering roles and consulting engagements — especially in financial services, healthcare, and enterprise SaaS.",
-  hire:
-    "Mani is open to senior AI engineering roles and selective consulting. He's particularly strong for teams building production RAG systems, agentic AI, or Azure AI Foundry integrations on .NET stacks. Email mani.ainml@gmail.com with your use case.",
-  azure:
-    "Mani is an Azure-native engineer. He's built production systems on Azure AI Foundry, Azure OpenAI, Azure AI Search, Azure Functions, Service Bus, API Management, Application Insights, Key Vault, and Azure DevOps CI/CD. He's pursuing the AI-102 Azure AI Engineer certification.",
-  ai:
-    "Mani's AI engineering philosophy: Advanced RAG over naive RAG, observable agents over black-box workflows, RAGAS-evaluated prompts over vibes. He focuses on the hard parts — hybrid retrieval, semantic re-ranking, multi-model routing, agent memory, and making LLM systems debuggable in production.",
-  education:
-    "Mani is currently pursuing an MSc in AI/ML at Liverpool John Moores University (UK, Expected 2026). He completed a Postgraduate Diploma in Generative AI & Applied ML at IIIT Bangalore (2025, CGPA 3.85/4.0) and is working toward the Azure AI Engineer Associate (AI-102) certification.",
-};
-
-function getResponse(input: string): string {
-  const lower = input.toLowerCase();
-  if (lower.includes("education") || lower.includes("degree") || lower.includes("university") || lower.includes("certif") || lower.includes("ljmu") || lower.includes("iiit"))
-    return MOCK_RESPONSES.education;
-  if (lower.includes("experience") || lower.includes("background") || lower.includes("work") || lower.includes("company") || lower.includes("insightsoftware") || lower.includes("philips") || lower.includes("adp"))
-    return MOCK_RESPONSES.experience;
-  if (lower.includes("project") || lower.includes("built") || lower.includes("portfolio") || lower.includes("rag") || lower.includes("agentic") || lower.includes("careflow"))
-    return MOCK_RESPONSES.projects;
-  if (lower.includes("skill") || lower.includes("tech") || lower.includes("stack") || lower.includes("semantic kernel") || lower.includes("langchain") || lower.includes("langraph"))
-    return MOCK_RESPONSES.skills;
-  if (lower.includes("contact") || lower.includes("email") || lower.includes("reach"))
-    return MOCK_RESPONSES.contact;
-  if (lower.includes("hire") || lower.includes("available") || lower.includes("opportunity") || lower.includes("role") || lower.includes("job"))
-    return MOCK_RESPONSES.hire;
-  if (lower.includes("azure") || lower.includes("microsoft") || lower.includes("cloud") || lower.includes("foundry") || lower.includes("openai"))
-    return MOCK_RESPONSES.azure;
-  if (lower.includes("ai") || lower.includes("llm") || lower.includes("machine learning") || lower.includes("agent") || lower.includes("mcp"))
-    return MOCK_RESPONSES.ai;
-  return MOCK_RESPONSES.default;
-}
+const WELCOME_MESSAGE =
+  "Hey! I'm Mani's AI Digital Twin. I can answer questions about his experience, projects, tech stack, and what he's building. What would you like to know?";
 
 const STARTER_PROMPTS = [
   "What AI projects has Mani built?",
@@ -65,8 +27,7 @@ export default function DigitalTwin({ onClose, embedded = false }: DigitalTwinPr
     {
       id: "welcome",
       role: "assistant",
-      content:
-        "Hey! I'm Mani's AI Digital Twin. I can answer questions about his experience, projects, and what he's building. What would you like to know?",
+      content: WELCOME_MESSAGE,
       timestamp: new Date(),
     },
   ]);
@@ -90,25 +51,40 @@ export default function DigitalTwin({ onClose, embedded = false }: DigitalTwinPr
         timestamp: new Date(),
       };
 
-      setMessages((prev) => [...prev, userMessage]);
+      const nextMessages = [...messages, userMessage];
+      setMessages(nextMessages);
       setInput("");
       setIsTyping(true);
 
-      // Simulate LLM response delay
-      await new Promise((r) => setTimeout(r, 800 + Math.random() * 1000));
+      try {
+        const apiMessages = nextMessages
+          .filter((m) => m.id !== "welcome")
+          .map(({ role, content }) => ({ role, content }));
 
-      const response = getResponse(text);
-      const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        content: response,
-        timestamp: new Date(),
-      };
-
-      setIsTyping(false);
-      setMessages((prev) => [...prev, assistantMessage]);
+        const response = await sendChatMessages(apiMessages);
+        const assistantMessage: ChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          content: response,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } catch (error) {
+        const assistantMessage: ChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          content:
+            error instanceof Error
+              ? error.message
+              : "Something went wrong. Please try again or email mani.ainml@gmail.com.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } finally {
+        setIsTyping(false);
+      }
     },
-    [isTyping]
+    [isTyping, messages]
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -256,6 +232,7 @@ export default function DigitalTwin({ onClose, embedded = false }: DigitalTwinPr
           onKeyDown={handleKeyDown}
           placeholder="Ask me anything about Mani..."
           rows={1}
+          maxLength={500}
           className="flex-1 resize-none bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-neon-blue/40 focus:bg-white/8 transition-all"
           style={{ maxHeight: "120px" }}
           onInput={(e) => {
@@ -277,10 +254,9 @@ export default function DigitalTwin({ onClose, embedded = false }: DigitalTwinPr
         </button>
       </form>
 
-      {/* LLM integration note */}
       <div className="px-4 py-2 bg-background/95 border-t border-white/5 text-center">
         <p className="text-xs text-white/20 font-mono">
-          {"// LLM integration ready · powered by mock responses"}
+          {"// powered by gpt-4o-mini · answers grounded in Mani's profile"}
         </p>
       </div>
     </div>

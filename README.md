@@ -12,7 +12,7 @@ Personal branding website for **Manikanta Neerukattu (Mani N)** — Senior Softw
 ExpertAIEngineer/
 ├── front-end/          Next.js 15 (App Router) — static export for Azure SWA
 ├── back-end/           .NET 8 Azure Functions — contact form + Digital Twin API
-└── .github/workflows/  CI/CD pipeline (Azure SWA auto-deploy on push to main)
+└── .github/workflows/  CI/CD — azure-swa.yml (front-end) + azure-functions.yml (back-end)
 ```
 
 The front-end is deployed as a **static export** to Azure Static Web Apps.
@@ -145,6 +145,8 @@ front-end/src/
 | `SENDGRID_FROM_EMAIL` | Verified sender address in SendGrid |
 | `CONTACT_EMAIL` | Email to receive contact form submissions |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins (e.g. `https://manibuildsai.com`) |
+| `OPENAI_API_KEY` | OpenAI API key for Digital Twin chat |
+| `OPENAI_MODEL` | Chat model (default: `gpt-4o-mini`) |
 
 ---
 
@@ -185,15 +187,23 @@ Copy the token and add it as a **GitHub repository secret**:
 | Secret name | Value |
 |---|---|
 | `AZURE_STATIC_WEB_APPS_API_TOKEN` | (paste token from Azure portal) |
+| `AZURE_FUNCTIONAPP_PUBLISH_PROFILE` | Paste entire `DigitalTwin.PublishSettings` XML (Azure Portal → **DigitalTwin** → Get publish profile) |
 
-#### 3. Add GitHub Actions variables
+#### 3b. Function App details (Digital Twin API)
+
+| Setting | Value |
+|---|---|
+| App name | `DigitalTwin` |
+| URL | `https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net` |
+
+#### 3. Add GitHub Actions variables (front-end)
 
 **GitHub → repo → Settings → Secrets and variables → Actions → Variables tab**
 
 | Variable name | Value |
 |---|---|
 | `NEXT_PUBLIC_SITE_URL` | `https://manibuildsai.com` |
-| `NEXT_PUBLIC_BACKEND_URL` | `https://<your-function-app>.azurewebsites.net` |
+| `NEXT_PUBLIC_BACKEND_URL` | `https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net` |
 | `GITHUB_USERNAME` | `maniscodebase` |
 
 #### 4. Configure custom domain (optional)
@@ -206,17 +216,26 @@ Enter `manibuildsai.com` and follow the DNS validation steps (CNAME or TXT recor
 
 ### Automated deployment (CI/CD)
 
-Every push to `main` triggers `.github/workflows/azure-swa.yml` which:
+Every push to `main` triggers two workflows:
+
+**Front-end** (`.github/workflows/azure-swa.yml`):
 
 1. Installs Node.js 22 dependencies
 2. Runs `npm run build:static` — Next.js static export → `front-end/out/`
 3. Uploads `out/` to Azure SWA via the `Azure/static-web-apps-deploy@v1` action
 
-Pull requests get **preview environments** automatically — each PR gets its own temporary URL.
+**Back-end** (`.github/workflows/azure-functions.yml`):
+
+1. `dotnet build` + `dotnet publish` the Functions project
+2. Deploys to Azure Function App via publish profile (main branch only)
+3. PRs run build only — no deploy
+
+Pull requests get **preview environments** for the front-end automatically — each PR gets its own temporary URL.
 Preview environments are cleaned up when the PR is closed.
 
 ```
 push to main  →  build:static  →  deploy to https://manibuildsai.com
+              →  dotnet publish →  deploy Function App
 open PR       →  build:static  →  deploy to https://<preview>.azurestaticapps.net
 close PR      →  preview environment deleted
 ```
@@ -260,7 +279,7 @@ cd back-end
 dotnet publish -c Release
 
 # Deploy to your Function App
-func azure functionapp publish <YOUR_FUNCTION_APP_NAME>
+func azure functionapp publish DigitalTwin
 ```
 
 After deploying, set environment variables in:
@@ -271,6 +290,8 @@ SENDGRID_API_KEY       = <your key>
 SENDGRID_FROM_EMAIL    = noreply@manibuildsai.com
 CONTACT_EMAIL          = mani.ainml@gmail.com
 ALLOWED_ORIGINS        = https://manibuildsai.com
+OPENAI_API_KEY         = <your OpenAI key>
+OPENAI_MODEL           = gpt-4o-mini
 ```
 
 Then link the Function App to the SWA:
@@ -313,44 +334,26 @@ All commands run from the `front-end/` directory:
 | **Experience** | Vertical timeline — Insightsoftware, Philips, ADP, Option Matrix |
 | **Education** | LJMU MSc (in-progress), IIIT Bangalore PG Diploma, JNTU B.Tech + certs |
 | **GitHub** | Live repo cards fetched from GitHub API with star counts |
-| **Digital Twin** | Floating AI chat UI, mock responses, LLM-ready architecture |
+| **Digital Twin** | Floating AI chat UI powered by OpenAI gpt-4o-mini via `/api/chat` |
 | **Contact** | Validated form, SendGrid email via Azure Function |
 
 ---
 
-## AI Digital Twin — LLM Integration
+## AI Digital Twin
 
-`back-end/Functions/DigitalTwinFunction.cs` is the stub entry point.
+The Digital Twin uses a **static system prompt** (full resume/profile in `back-end/Prompts/digital-twin-system.txt`) with **OpenAI gpt-4o-mini** — no embeddings or RAG. OpenAI prompt caching applies automatically when the system prefix is identical across requests.
 
-To wire a real LLM (Semantic Kernel + Azure OpenAI):
+**Flow:** `DigitalTwin.tsx` → `POST /api/chat` → `DigitalTwinFunction.cs` → `DigitalTwinChatService` → OpenAI API
 
-```bash
-cd back-end
-dotnet add package Microsoft.SemanticKernel
-dotnet add package Azure.AI.OpenAI
-```
+**Local dev:** run `func start` in `back-end/` and set `NEXT_PUBLIC_BACKEND_URL=http://localhost:7071` in `front-end/.env.local`.
 
-Then in `Program.cs`:
+**Production:** SWA proxies `/api/chat` to the linked Function App (same origin, no CORS).
 
-```csharp
-builder.Services.AddSingleton(sp =>
-    Kernel.CreateBuilder()
-        .AddAzureOpenAIChatCompletion(
-            deploymentName: Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT")!,
-            endpoint: Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")!,
-            apiKey: Environment.GetEnvironmentVariable("AZURE_OPENAI_KEY")!)
-        .Build());
-```
-
-Replace the stub response in `DigitalTwinFunction.cs` with a Semantic Kernel call,
-and update the front-end's `DigitalTwin.tsx` to call the `/api/chat` endpoint.
-
-Add to Azure Function App environment variables:
+Configure in Azure Function App Application Settings:
 
 ```
-AZURE_OPENAI_ENDPOINT    = https://<your-resource>.openai.azure.com/
-AZURE_OPENAI_KEY         = <your key>
-AZURE_OPENAI_DEPLOYMENT  = gpt-4o
+OPENAI_API_KEY   = sk-...
+OPENAI_MODEL     = gpt-4o-mini
 ```
 
 ---

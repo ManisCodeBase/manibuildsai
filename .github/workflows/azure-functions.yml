@@ -1,0 +1,81 @@
+name: Deploy Backend — Azure Functions
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "back-end/**"
+      - ".github/workflows/azure-functions.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "back-end/**"
+      - ".github/workflows/azure-functions.yml"
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: back-end
+  DOTNET_VERSION: "8.0.x"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build & Test Backend
+    defaults:
+      run:
+        working-directory: back-end
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish --configuration Release --output ./output --no-build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: function-app
+          path: back-end/output
+          retention-days: 1
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    name: Deploy to Azure Functions
+    needs: build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: function-app
+          path: ./output
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        id: deploy
+        with:
+          app-name: DigitalTwin
+          package: ./output
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+
+      - name: Deployment summary
+        run: |
+          echo "Deployed to Function App: DigitalTwin"
+          echo "URL: https://digitaltwin-c8hahfg9b6ctbeg2.canadacentral-01.azurewebsites.net"
+          echo "Ensure these Application Settings are configured in Azure Portal:"
+          echo "  OPENAI_API_KEY, OPENAI_MODEL, SENDGRID_API_KEY, SENDGRID_FROM_EMAIL,"
+          echo "  CONTACT_EMAIL, ALLOWED_ORIGINS, AzureWebJobsStorage, FUNCTIONS_WORKER_RUNTIME"

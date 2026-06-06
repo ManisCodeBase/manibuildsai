@@ -9,7 +9,8 @@ front-end/_next_api_temp/
 # ── Back-end ──────────────────────────────────────────────────────────────────
 back-end/bin/
 back-end/obj/
-back-end/local.settings.json   # contains secrets — never commit
+back-end/output/
+**/local.settings.json
 
 # ── OS / Editor ───────────────────────────────────────────────────────────────
 .DS_Store

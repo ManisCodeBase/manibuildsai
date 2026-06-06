@@ -1,16 +1,15 @@
 using System.Net;
+using ManiBuildsAI.Functions.Models;
+using ManiBuildsAI.Functions.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
 namespace ManiBuildsAI.Functions.Functions;
 
-/// <summary>
-/// Placeholder for the Digital Twin AI chat endpoint.
-/// Replace the stub response with a real LLM call (Azure OpenAI / Semantic Kernel)
-/// when ready to implement the full AI chat experience.
-/// </summary>
-public class DigitalTwinFunction(ILogger<DigitalTwinFunction> logger)
+public class DigitalTwinFunction(
+    DigitalTwinChatService chatService,
+    ILogger<DigitalTwinFunction> logger)
 {
     [Function("DigitalTwin")]
     public async Task<HttpResponseData> RunAsync(
@@ -18,34 +17,78 @@ public class DigitalTwinFunction(ILogger<DigitalTwinFunction> logger)
         HttpRequestData req)
     {
         if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+            return CorsResponse(req, HttpStatusCode.OK);
+
+        ChatRequest? body;
+        try
         {
-            var preflight = req.CreateResponse(HttpStatusCode.OK);
-            AddCorsHeaders(preflight);
-            return preflight;
+            body = await req.ReadFromJsonAsync<ChatRequest>();
+        }
+        catch
+        {
+            return await JsonResponse(req, HttpStatusCode.BadRequest,
+                new ChatErrorResponse("Invalid request body."));
         }
 
-        // TODO: Parse incoming messages array and call Azure OpenAI / Semantic Kernel
-        // Example structure expected from the front-end:
-        // { "messages": [{ "role": "user", "content": "..." }] }
-
-        logger.LogInformation("Digital Twin chat request received — LLM not yet wired");
-
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        AddCorsHeaders(response);
-        await response.WriteAsJsonAsync(new
+        if (body?.Messages is null || body.Messages.Count == 0)
         {
-            role    = "assistant",
-            content = "Hi! I'm Mani's Digital Twin. The LLM integration is coming soon. " +
-                      "In the meantime, feel free to reach out directly via the contact form.",
-        });
+            return await JsonResponse(req, HttpStatusCode.BadRequest,
+                new ChatErrorResponse("At least one message is required."));
+        }
 
-        return response;
+        IReadOnlyList<(string Role, string Content)> history;
+        try
+        {
+            history = DigitalTwinChatService.ValidateAndTrimHistory(
+                body.Messages.Select(m => (m.Role, m.Content)));
+        }
+        catch (ArgumentException ex)
+        {
+            return await JsonResponse(req, HttpStatusCode.BadRequest,
+                new ChatErrorResponse(ex.Message));
+        }
+
+        try
+        {
+            var reply = await chatService.GetReplyAsync(history);
+            logger.LogInformation("Digital Twin chat request completed");
+            return await JsonResponse(req, HttpStatusCode.OK,
+                new ChatResponse("assistant", reply));
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogError(ex, "Digital Twin chat failed");
+            return await JsonResponse(req, HttpStatusCode.ServiceUnavailable,
+                new ChatErrorResponse(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected Digital Twin error");
+            return await JsonResponse(req, HttpStatusCode.InternalServerError,
+                new ChatErrorResponse("Something went wrong. Please try again."));
+        }
+    }
+
+    private static HttpResponseData CorsResponse(HttpRequestData req, HttpStatusCode status)
+    {
+        var res = req.CreateResponse(status);
+        AddCorsHeaders(res);
+        return res;
+    }
+
+    private static async Task<HttpResponseData> JsonResponse(
+        HttpRequestData req, HttpStatusCode status, object payload)
+    {
+        var res = req.CreateResponse(status);
+        AddCorsHeaders(res);
+        await res.WriteAsJsonAsync(payload);
+        return res;
     }
 
     private static void AddCorsHeaders(HttpResponseData res)
     {
         var allowed = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS") ?? "*";
-        res.Headers.Add("Access-Control-Allow-Origin",  allowed == "*" ? "*" : allowed.Split(',')[0]);
+        res.Headers.Add("Access-Control-Allow-Origin", allowed == "*" ? "*" : allowed.Split(',')[0]);
         res.Headers.Add("Access-Control-Allow-Methods", "POST, OPTIONS");
         res.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
     }

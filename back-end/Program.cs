@@ -1,13 +1,19 @@
+using ManiBuildsAI.Functions.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 var host = new HostBuilder()
-    .ConfigureFunctionsWebApplication()          // Enables ASP.NET Core integration (CORS, middleware)
+    .ConfigureFunctionsWebApplication()
     .ConfigureServices(services =>
     {
-        //services.AddApplicationInsightsTelemetryWorkerService();
-        //services.ConfigureFunctionsApplicationInsights();
+        services.AddHttpClient("OpenAI", client =>
+        {
+            client.BaseAddress = new Uri("https://api.openai.com/");
+            client.Timeout = TimeSpan.FromSeconds(60);
+        });
+
+        services.AddSingleton<DigitalTwinChatService>();
     })
     .Build();
 
