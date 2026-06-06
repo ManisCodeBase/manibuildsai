@@ -25,6 +25,16 @@ This workflow deploys via **Kudu Zip Deploy** using only GitHub-owned actions (`
 
 If the error persists, check **GitHub → Organization Settings → Actions → General → Policies** and ensure GitHub-owned actions are allowed.
 
+### Zip deploy "401 Unauthorized"
+
+1. **Azure Portal → DigitalTwin → Configuration → General settings**
+2. Set **SCM Basic Auth Publishing Credentials** → **On**
+3. **Save** and **restart** the Function App
+4. **Download a new publish profile** (Overview → Get publish profile)
+5. Update GitHub secret **`AZURE_FUNCTIONAPP_PUBLISH_PROFILE`** with the full new XML
+
+Also confirm the Function App is **Running** and not restricted by networking rules blocking the GitHub Actions runner.
+
 ---
 
 ## GitHub Actions — required configuration
