@@ -166,8 +166,8 @@ export default function Experience() {
             Where I&apos;ve <span className="gradient-text">Made Impact</span>
           </motion.h2>
           <motion.p variants={fadeUpVariant} className="text-white/50 text-lg max-w-2xl mx-auto">
-            9+ years delivering production AI systems across finance, healthcare, and enterprise
-            platforms — from full-stack roots to Agentic AI architecture.
+            10+ years delivering production AI systems across finance, healthcare, and enterprise
+            platforms — from full-stack roots to multi-cloud Agentic AI architecture.
           </motion.p>
         </motion.div>
 

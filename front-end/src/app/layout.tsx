@@ -21,17 +21,18 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://manibuildsai.com";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Mani N | Senior AI Engineer — Advanced RAG, Agentic AI & .NET Azure Systems",
+    default: "Mani N | Senior AI Engineer — Advanced RAG, Agentic AI & Multi-Cloud (.NET, Azure, AWS)",
     template: "%s | Mani N · manibuildsai.com",
   },
   description:
-    "Manikanta Neerukattu (Mani N) — Senior Software Engineer & Applied AI Engineer with 10 years in the Microsoft ecosystem. Specializes in Advanced RAG pipelines, multi-agent orchestration, Semantic Kernel, and LLM-powered automation. Based in Hyderabad, India.",
+    "Manikanta Neerukattu (Mani N) — Senior Software Engineer & Applied AI Engineer with 10 years in the Microsoft and AWS ecosystems. Specializes in Advanced RAG pipelines, multi-agent orchestration, AWS Bedrock, Azure AI Foundry, Semantic Kernel, and LLM-powered automation. Based in Hyderabad, India.",
   keywords: [
     "AI Engineer",
     "Applied AI Engineer",
     "Advanced RAG",
     "Semantic Kernel",
     "Azure OpenAI",
+    "AWS Bedrock",
     "Agentic AI",
     "Multi-Agent Systems",
     "MCP Model Context Protocol",
@@ -39,6 +40,8 @@ export const metadata: Metadata = {
     "AutoGen",
     ".NET 8 AI",
     "Azure AI Foundry",
+    "AWS Lambda",
+    "Multi-Cloud AI",
     "LLM Engineer",
     "manibuildsai",
     "Manikanta Neerukattu",
@@ -62,9 +65,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: siteUrl,
     siteName: "Mani | AI Engineer",
-    title: "Mani N | Senior AI Engineer — Advanced RAG, Agentic AI & .NET Azure Systems",
+    title: "Mani N | Senior AI Engineer — Advanced RAG, Agentic AI & Multi-Cloud (.NET, Azure, AWS)",
     description:
-      "Senior AI Engineer with 10 years building production-grade Advanced RAG, multi-agent systems, and Semantic Kernel solutions at Insightsoftware, Philips, and ADP.",
+      "Senior AI Engineer with 10 years building production-grade Advanced RAG, multi-agent systems, and multi-cloud AI solutions at Insightsoftware, Philips, and ADP.",
     images: [
       {
         url: `${siteUrl}/og-image.png`,
@@ -76,9 +79,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mani N | Senior AI Engineer — Advanced RAG, Agentic AI & .NET Azure",
+    title: "Mani N | Senior AI Engineer — Advanced RAG, Agentic AI & Multi-Cloud",
     description:
-      "10 years building production AI. Advanced RAG, Semantic Kernel, multi-agent systems at Insightsoftware, Philips & ADP.",
+      "10 years building production AI. Advanced RAG, AWS Bedrock, Azure AI Foundry, multi-agent systems at Insightsoftware, Philips & ADP.",
     images: [`${siteUrl}/og-image.png`],
   },
   icons: {

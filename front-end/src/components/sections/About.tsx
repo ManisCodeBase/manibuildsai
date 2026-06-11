@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import { Brain, Code2, Layers, Zap, Award, Building2 } from "lucide-react";
+import { Brain, Cloud, Layers, Zap, Award, Building2 } from "lucide-react";
 import { staggerChildren, fadeUpVariant } from "@/lib/utils";
 
 const strengths = [
@@ -16,10 +16,10 @@ const strengths = [
     borderColor: "border-neon-blue/20",
   },
   {
-    icon: Code2,
-    title: ".NET & Azure Depth",
+    icon: Cloud,
+    title: "Multi-Cloud Engineering",
     description:
-      "10 years of .NET engineering with hands-on production depth across the Azure ecosystem — from Functions and Service Bus to AI Foundry and Cognitive Services.",
+      "Strong .NET backend foundation complemented by hands-on cloud engineering across Azure (AI Foundry, Functions, Service Bus) and AWS (Bedrock, Lambda, S3, RDS, DynamoDB, ECS/EKS) — with multi-model LLM routing to reduce vendor lock-in.",
     color: "text-purple-400",
     bgColor: "bg-purple-400/10",
     borderColor: "border-purple-400/20",
@@ -81,13 +81,16 @@ export default function About() {
             variants={fadeUpVariant}
             className="text-white/60 text-lg max-w-3xl mx-auto leading-relaxed"
           >
-            I&apos;m a Senior Software Engineer with a decade in the Microsoft ecosystem — from
-            full-stack enterprise .NET to applied AI engineering. I specialize in{" "}
+            I&apos;m a Senior Software Engineer with around 10 years in the Microsoft and AWS
+            ecosystems — from full-stack enterprise .NET to applied AI engineering. I specialize in{" "}
             <span className="text-neon-blue">Advanced RAG pipelines</span>,{" "}
             <span className="text-purple-400">multi-agent orchestration</span>, and{" "}
             <span className="text-cyan-400">LLM-powered automation</span> that solves real business
             problems in financial services, healthcare, and ERP — not prototypes that never reach
-            production. Currently completing an{" "}
+            production. Deep experience across{" "}
+            <span className="text-amber-400">Azure AI Foundry</span>,{" "}
+            <span className="text-orange-400">AWS Bedrock</span>, Semantic Kernel, and agentic
+            frameworks. Currently completing an{" "}
             <span className="text-neon-blue">MSc in AI/ML at Liverpool John Moores University</span>.
           </motion.p>
         </motion.div>
@@ -152,8 +155,9 @@ export default function About() {
           <blockquote className="relative max-w-2xl mx-auto">
             <div className="text-6xl text-neon-blue/20 font-serif absolute -top-4 -left-4">&ldquo;</div>
             <p className="text-xl sm:text-2xl text-white/70 font-light italic leading-relaxed px-8">
-              Strong backend foundation in .NET and Azure, extended with hands-on depth in Semantic
-              Kernel, agentic frameworks, and observable production AI behavior.
+              Strong backend foundation in .NET, Azure, and AWS — extended with hands-on depth in
+              Semantic Kernel, AWS Bedrock, agentic frameworks, and observable production AI
+              behavior.
             </p>
             <div className="text-6xl text-neon-blue/20 font-serif absolute -bottom-8 -right-4">&rdquo;</div>
             <footer className="mt-6 text-sm text-white/30 font-mono">— Mani N, Senior AI Engineer</footer>

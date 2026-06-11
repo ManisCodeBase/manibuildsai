@@ -116,7 +116,7 @@ export default function Hero() {
           transition={{ delay: 0.42, duration: 0.5 }}
           className="text-base sm:text-lg text-white/40 font-mono mb-5"
         >
-          Senior Software Engineer · Applied AI Engineer · .NET, Azure &amp; Agentic AI
+          Senior Software Engineer · Applied AI Engineer · .NET, Azure, AWS &amp; Agentic AI
         </motion.p>
 
         {/* Type animation tagline */}
@@ -130,11 +130,11 @@ export default function Hero() {
             sequence={[
               "I build production-grade AI systems",
               2000,
-              "I ship agentic AI with real-world impact",
+              "I ship multi-cloud AI on Azure & AWS",
               2000,
               "I architect Advanced RAG pipelines",
               2000,
-              "I turn enterprise data into AI intelligence",
+              "I orchestrate multi-agent systems that scale",
               2000,
             ]}
             wrapper="span"
